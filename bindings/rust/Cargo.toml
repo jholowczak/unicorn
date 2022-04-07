@@ -31,7 +31,7 @@ bytes = { optional = true, version = "1" }
 pkg-config = { optional = true, version = "0.3" }
 
 [features]
-default = ["build_unicorn_cmake", "arch_x86"]
+default = ["build_unicorn_cmake", "arch_all"]
 use_system_unicorn = ["pkg-config"]
 build_unicorn_cmake = ["reqwest", "flate2", "tar", "bytes"]
 
