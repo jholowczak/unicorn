@@ -193,11 +193,12 @@ fn build_with_cmake() {
                 .output()
                 .expect("Fail to build unicorn on *nix.");
             eprintln!(
-                "{} {:?} {:?} {:?}",
+                "{} {:?} {:?} {:?}\n{:?}",
                 cmake_arch_list(),
                 rust_build_path,
                 unicorn_dir,
-                unicorn_dir
+                unicorn_dir,
+                cmd
             );
 
             println!(

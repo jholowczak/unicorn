@@ -570,6 +570,8 @@ impl<'a, D> Unicorn<'a, D> {
     pub fn reg_read_long<T: Into<i32>>(&self, regid: T) -> Result<Box<[u8]>, uc_error> {
         let err: uc_error;
         let boxed: Box<[u8]>;
+
+        #[allow(unused_assignments)]
         let mut value: Vec<u8> = Vec::new();
         let curr_reg_id = regid.into();
         let curr_arch = self.get_arch();
@@ -1081,6 +1083,18 @@ impl<'a, D> Unicorn<'a, D> {
             #[cfg(feature = "arch_s390x")]
             Arch::S390X => RegisterS390X::PC as i32,
             Arch::MAX => panic!("Illegal Arch specified"),
+            #[cfg(not(all(
+                feature = "arch_x86",
+                feature = "arch_aarch64",
+                feature = "arch_arm",
+                feature = "arch_mips",
+                feature = "arch_sparc",
+                feature = "arch_m68k",
+                feature = "arch_ppc",
+                feature = "arch_riscv",
+                feature = "arch_390x"
+            )))]
+            #[cfg(not(feature = "arch_all"))]
             _ => panic!("Illegal Arch specified"),
         };
         self.reg_read(reg)
@@ -1110,6 +1124,18 @@ impl<'a, D> Unicorn<'a, D> {
             #[cfg(feature = "arch_s390x")]
             Arch::S390X => RegisterS390X::PC as i32,
             Arch::MAX => panic!("Illegal Arch specified"),
+            #[cfg(not(all(
+                feature = "arch_x86",
+                feature = "arch_aarch64",
+                feature = "arch_arm",
+                feature = "arch_mips",
+                feature = "arch_sparc",
+                feature = "arch_m68k",
+                feature = "arch_ppc",
+                feature = "arch_riscv",
+                feature = "arch_390x"
+            )))]
+            #[cfg(not(feature = "arch_all"))]
             _ => panic!("Illegal Arch specified"),
         };
         self.reg_write(reg, value)
