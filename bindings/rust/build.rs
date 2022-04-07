@@ -65,33 +65,24 @@ fn download_unicorn() -> PathBuf {
 #[cfg(feature = "build_unicorn_cmake")]
 fn cmake_arch_list() -> String {
     let mut features = Vec::<&str>::new();
-    if cfg!(feature = "arch_aarch64") {
-        features.push("aarch64");
-    }
-    if cfg!(feature = "arch_arm") {
-        features.push("arm");
-    }
-    if cfg!(feature = "arch_m68k") {
-        features.push("m68k");
-    }
-    if cfg!(feature = "arch_mips") {
-        features.push("mips");
-    }
-    if cfg!(feature = "arch_ppc") {
-        features.push("ppc");
-    }
-    if cfg!(feature = "arch_riscv") {
-        features.push("riscv");
-    }
-    if cfg!(feature = "arch_s390x") {
-        features.push("s390x");
-    }
-    if cfg!(feature = "sparc") {
-        features.push("sparc");
-    }
-    if cfg!(feature = "arch_x86") {
-        features.push("x86");
-    }
+    #[cfg(feature = "arch_aarch64")]
+    features.push("aarch64");
+    #[cfg(feature = "arch_arm")]
+    features.push("arm");
+    #[cfg(feature = "arch_m68k")]
+    features.push("m68k");
+    #[cfg(feature = "arch_mips")]
+    features.push("mips");
+    #[cfg(feature = "arch_ppc")]
+    features.push("ppc");
+    #[cfg(feature = "arch_riscv")]
+    features.push("riscv");
+    #[cfg(feature = "arch_s390x")]
+    features.push("s390x");
+    #[cfg(feature = "arch_sparc")]
+    features.push("sparc");
+    #[cfg(feature = "arch_x86")]
+    features.push("x86");
     features.join(";")
 }
 
@@ -142,7 +133,7 @@ fn build_with_cmake() {
                 cmd.arg("-DCMAKE_BUILD_TYPE=Release");
             }
 
-            cmd.arg(format!("-DUNICORN_ARCH=\"{}\"", cmake_arch_list()));
+            cmd.arg(format!("-DUNICORN_ARCH={:?}", cmake_arch_list()));
 
             cmd.output()
                 .expect("Fail to create build directory on Windows.");
@@ -182,7 +173,7 @@ fn build_with_cmake() {
                 cmd.arg("-DCMAKE_BUILD_TYPE=Release");
             }
 
-            cmd.arg(format!("-DUNICORN_ARCH=\"{}\"", cmake_arch_list()));
+            cmd.arg(format!("-DUNICORN_ARCH={:?}", cmake_arch_list()));
 
             cmd.output()
                 .expect("Fail to create build directory on *nix.");
@@ -192,14 +183,6 @@ fn build_with_cmake() {
                 .arg("-j6")
                 .output()
                 .expect("Fail to build unicorn on *nix.");
-            eprintln!(
-                "{} {:?} {:?} {:?}\n{:?}",
-                cmake_arch_list(),
-                rust_build_path,
-                unicorn_dir,
-                unicorn_dir,
-                cmd
-            );
 
             println!(
                 "cargo:rustc-link-search={}",
