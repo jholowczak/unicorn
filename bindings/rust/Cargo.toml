@@ -31,7 +31,26 @@ bytes = { optional = true, version = "1" }
 pkg-config = { optional = true, version = "0.3" }
 
 [features]
-default = ["build_unicorn_cmake"]
-
+default = ["build_unicorn_cmake", "arch_x86"]
 use_system_unicorn = ["pkg-config"]
 build_unicorn_cmake = ["reqwest", "flate2", "tar", "bytes"]
+
+arch_all = ["arch_aarch64",
+            "arch_arm",
+            "arch_m68k",
+            "arch_mips",
+            "arch_ppc",
+            "arch_riscv",
+            "arch_s390x",
+            "arch_sparc",
+            "arch_x86"
+           ]
+arch_aarch64 = []
+arch_arm = []
+arch_m68k = []
+arch_mips = []
+arch_ppc = []
+arch_riscv = []
+arch_s390x = []
+arch_sparc = []
+arch_x86 = []

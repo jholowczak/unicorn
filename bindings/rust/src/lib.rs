@@ -33,21 +33,45 @@ extern crate alloc;
 
 pub mod unicorn_const;
 
+#[cfg(feature = "arch_arm")]
 mod arm;
+#[cfg(feature = "arch_aarch64")]
 mod arm64;
 mod ffi;
+#[cfg(feature = "arch_m68k")]
 mod m68k;
+#[cfg(feature = "arch_mips")]
 mod mips;
+#[cfg(feature = "arch_ppc")]
 mod ppc;
+#[cfg(feature = "arch_riscv")]
 mod riscv;
+#[cfg(feature = "arch_s390x")]
 mod s390x;
+#[cfg(feature = "arch_sparc")]
 mod sparc;
+#[cfg(feature = "arch_x86")]
 mod x86;
 
-pub use crate::{
-    arm::*, arm64::*, m68k::*, mips::*, ppc::*, riscv::*, s390x::*, sparc::*, unicorn_const::*,
-    x86::*,
-};
+#[cfg(feature = "arch_arm")]
+pub use crate::arm::*;
+#[cfg(feature = "arch_aarch64")]
+pub use crate::arm64::*;
+#[cfg(feature = "arch_m68k")]
+pub use crate::m68k::*;
+#[cfg(feature = "arch_mips")]
+pub use crate::mips::*;
+#[cfg(feature = "arch_ppc")]
+pub use crate::ppc::*;
+#[cfg(feature = "arch_riscv")]
+pub use crate::riscv::*;
+#[cfg(feature = "arch_s390x")]
+pub use crate::s390x::*;
+#[cfg(feature = "arch_sparc")]
+pub use crate::sparc::*;
+pub use crate::unicorn_const::*;
+#[cfg(feature = "arch_x86")]
+pub use crate::x86::*;
 
 use alloc::{boxed::Box, rc::Rc, vec::Vec};
 use core::{cell::UnsafeCell, ptr};
@@ -546,41 +570,47 @@ impl<'a, D> Unicorn<'a, D> {
     pub fn reg_read_long<T: Into<i32>>(&self, regid: T) -> Result<Box<[u8]>, uc_error> {
         let err: uc_error;
         let boxed: Box<[u8]>;
-        let mut value: Vec<u8>;
+        let mut value: Vec<u8> = Vec::new();
         let curr_reg_id = regid.into();
         let curr_arch = self.get_arch();
 
-        if curr_arch == Arch::X86 {
-            if curr_reg_id >= x86::RegisterX86::XMM0 as i32
-                && curr_reg_id <= x86::RegisterX86::XMM31 as i32
+        if cfg!(feature = "arch_x86") && curr_arch == Arch::X86 {
+            #[cfg(feature = "arch_x86")]
             {
-                value = vec![0; 16];
-            } else if curr_reg_id >= x86::RegisterX86::YMM0 as i32
-                && curr_reg_id <= x86::RegisterX86::YMM31 as i32
-            {
-                value = vec![0; 32];
-            } else if curr_reg_id >= x86::RegisterX86::ZMM0 as i32
-                && curr_reg_id <= x86::RegisterX86::ZMM31 as i32
-            {
-                value = vec![0; 64];
-            } else if curr_reg_id == x86::RegisterX86::GDTR as i32
-                || curr_reg_id == x86::RegisterX86::IDTR as i32
-                || (curr_reg_id >= x86::RegisterX86::ST0 as i32
-                    && curr_reg_id <= x86::RegisterX86::ST7 as i32)
-            {
-                value = vec![0; 10]; // 64 bit base address in IA-32e mode
-            } else {
-                return Err(uc_error::ARG);
+                if curr_reg_id >= x86::RegisterX86::XMM0 as i32
+                    && curr_reg_id <= x86::RegisterX86::XMM31 as i32
+                {
+                    value = vec![0; 16];
+                } else if curr_reg_id >= x86::RegisterX86::YMM0 as i32
+                    && curr_reg_id <= x86::RegisterX86::YMM31 as i32
+                {
+                    value = vec![0; 32];
+                } else if curr_reg_id >= x86::RegisterX86::ZMM0 as i32
+                    && curr_reg_id <= x86::RegisterX86::ZMM31 as i32
+                {
+                    value = vec![0; 64];
+                } else if curr_reg_id == x86::RegisterX86::GDTR as i32
+                    || curr_reg_id == x86::RegisterX86::IDTR as i32
+                    || (curr_reg_id >= x86::RegisterX86::ST0 as i32
+                        && curr_reg_id <= x86::RegisterX86::ST7 as i32)
+                {
+                    value = vec![0; 10]; // 64 bit base address in IA-32e mode
+                } else {
+                    return Err(uc_error::ARG);
+                }
             }
-        } else if curr_arch == Arch::ARM64 {
-            if (curr_reg_id >= arm64::RegisterARM64::Q0 as i32
-                && curr_reg_id <= arm64::RegisterARM64::Q31 as i32)
-                || (curr_reg_id >= arm64::RegisterARM64::V0 as i32
-                    && curr_reg_id <= arm64::RegisterARM64::V31 as i32)
+        } else if cfg!(feature = "arch_aarch") && curr_arch == Arch::ARM64 {
+            #[cfg(feature = "arch_aarch64")]
             {
-                value = vec![0; 16];
-            } else {
-                return Err(uc_error::ARG);
+                if (curr_reg_id >= arm64::RegisterARM64::Q0 as i32
+                    && curr_reg_id <= arm64::RegisterARM64::Q31 as i32)
+                    || (curr_reg_id >= arm64::RegisterARM64::V0 as i32
+                        && curr_reg_id <= arm64::RegisterARM64::V31 as i32)
+                {
+                    value = vec![0; 16];
+                } else {
+                    return Err(uc_error::ARG);
+                }
             }
         } else {
             return Err(uc_error::ARCH);
@@ -1032,16 +1062,26 @@ impl<'a, D> Unicorn<'a, D> {
     pub fn pc_read(&self) -> Result<u64, uc_error> {
         let arch = self.get_arch();
         let reg = match arch {
+            #[cfg(feature = "arch_x86")]
             Arch::X86 => RegisterX86::RIP as i32,
+            #[cfg(feature = "arch_arm")]
             Arch::ARM => RegisterARM::PC as i32,
+            #[cfg(feature = "arch_aarch64")]
             Arch::ARM64 => RegisterARM64::PC as i32,
+            #[cfg(feature = "arch_mips")]
             Arch::MIPS => RegisterMIPS::PC as i32,
+            #[cfg(feature = "arch_sparc")]
             Arch::SPARC => RegisterSPARC::PC as i32,
+            #[cfg(feature = "arch_m68k")]
             Arch::M68K => RegisterM68K::PC as i32,
+            #[cfg(feature = "arch_ppc")]
             Arch::PPC => RegisterPPC::PC as i32,
+            #[cfg(feature = "arch_riscv")]
             Arch::RISCV => RegisterRISCV::PC as i32,
+            #[cfg(feature = "arch_s390x")]
             Arch::S390X => RegisterS390X::PC as i32,
             Arch::MAX => panic!("Illegal Arch specified"),
+            _ => panic!("Illegal Arch specified"),
         };
         self.reg_read(reg)
     }
@@ -1051,16 +1091,26 @@ impl<'a, D> Unicorn<'a, D> {
     pub fn set_pc(&mut self, value: u64) -> Result<(), uc_error> {
         let arch = self.get_arch();
         let reg = match arch {
+            #[cfg(feature = "arch_x86")]
             Arch::X86 => RegisterX86::RIP as i32,
+            #[cfg(feature = "arch_arm")]
             Arch::ARM => RegisterARM::PC as i32,
+            #[cfg(feature = "arch_aarch64")]
             Arch::ARM64 => RegisterARM64::PC as i32,
+            #[cfg(feature = "arch_mips")]
             Arch::MIPS => RegisterMIPS::PC as i32,
+            #[cfg(feature = "arch_sparc")]
             Arch::SPARC => RegisterSPARC::PC as i32,
+            #[cfg(feature = "arch_m68k")]
             Arch::M68K => RegisterM68K::PC as i32,
+            #[cfg(feature = "arch_ppc")]
             Arch::PPC => RegisterPPC::PC as i32,
+            #[cfg(feature = "arch_riscv")]
             Arch::RISCV => RegisterRISCV::PC as i32,
+            #[cfg(feature = "arch_s390x")]
             Arch::S390X => RegisterS390X::PC as i32,
             Arch::MAX => panic!("Illegal Arch specified"),
+            _ => panic!("Illegal Arch specified"),
         };
         self.reg_write(reg, value)
     }
